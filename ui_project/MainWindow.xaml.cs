@@ -95,7 +95,7 @@ namespace ui_project
                 // This is the bitmap we'll display on-screen
                 this.colorBitmap = new WriteableBitmap(colorWidth, colorHeight, 96.0, 96.0, PixelFormats.Bgr32, null);
 
-                this.Forgound.Source = this.colorBitmap;
+                this.Foreground.Source = this.colorBitmap;
 
                 // Add an event handler to be called whenever there is new depth frame data
                 this.sensor.AllFramesReady += this.SensorAllFramesReady;
@@ -226,7 +226,7 @@ namespace ui_project
                         PixelFormats.Bgra32,
                         null);
 
-                    Forgound.OpacityMask = new ImageBrush { ImageSource = this.playerOpacityMaskImage };
+                    Foreground.OpacityMask = new ImageBrush { ImageSource = this.playerOpacityMaskImage };
                 }
 
                 this.playerOpacityMaskImage.WritePixels(
