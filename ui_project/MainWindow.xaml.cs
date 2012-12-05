@@ -17,6 +17,8 @@ namespace ui_project
 
     using Microsoft.Kinect;
     using System.IO;
+    using Microsoft.Samples.Kinect.SwipeGestureRecognizer;
+    using System.Windows.Media.Animation;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -43,13 +45,45 @@ namespace ui_project
         private int opaquePixelValue = -1;
         private WriteableBitmap playerOpacityMaskImage = null;
 
+        private List<BitmapImage> BackgroundImages = new List<BitmapImage>();
+        private int CurrentBackground = 0;
+
+        private Recognizer recognizer;
+        private Skeleton[] skeletons = new Skeleton[0];
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainWindow" /> class.
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Handles the Loaded event of the Window control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">
+        ///   The <see cref="RoutedEventArgs" />
+        ///   instance containing the event data.
+        /// </param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            // load background images
+            var curr = Directory.GetCurrentDirectory();
+            var images = Directory.GetFiles(curr + "\\Images\\");
+
+            foreach (var image in images)
+            {
+                var bmp = new BitmapImage(new Uri(image));
+                this.BackgroundImages.Add(bmp);
+            }
+
+            if (this.BackgroundImages.Count > 0)
+            {
+                this.imgBackground.Source = this.BackgroundImages[0];
+            }
+
             // Look through all sensors and start the first connected one.
             // This requires that a Kinect is connected at the time of app startup.
             // To make your app robust against plug/unplug, 
@@ -95,10 +129,11 @@ namespace ui_project
                 // This is the bitmap we'll display on-screen
                 this.colorBitmap = new WriteableBitmap(colorWidth, colorHeight, 96.0, 96.0, PixelFormats.Bgr32, null);
 
-                this.Foreground.Source = this.colorBitmap;
+                this.imgForeground.Source = this.colorBitmap;
 
                 // Add an event handler to be called whenever there is new depth frame data
                 this.sensor.AllFramesReady += this.SensorAllFramesReady;
+                this.sensor.SkeletonFrameReady += this.OnSkeletonFrameReady;
 
                 // Start the sensor!
                 try
@@ -110,6 +145,83 @@ namespace ui_project
                     this.sensor = null;
                 }
             }
+
+            this.recognizer = CreateRecognizer();
+        }
+
+        /// <summary>
+        /// Create a wired-up recognizer for running the slideshow.
+        /// </summary>
+        /// <returns>The wired-up recognizer.</returns>
+        private Recognizer CreateRecognizer()
+        {
+            // Instantiate a recognizer.
+            var recognizer = new Recognizer();
+
+            // Wire-up swipe right to manually advance picture.
+            recognizer.SwipeRightDetected += (s, e) =>
+            {
+                NextBackground();
+            };
+
+            // Wire-up swipe left to manually reverse picture.
+            recognizer.SwipeLeftDetected += (s, e) =>
+            {
+                PreviousBackground();
+            };
+
+            return recognizer;
+        }
+        
+        /// <summary>
+        /// Handler for skeleton ready handler.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The event args.</param>
+        private void OnSkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
+        {
+            // Get the frame.
+            using (var frame = e.OpenSkeletonFrame())
+            {
+                // Ensure we have a frame.
+                if (frame != null)
+                {
+                    // Resize the skeletons array if a new size (normally only on first call).
+                    if (this.skeletons.Length != frame.SkeletonArrayLength)
+                    {
+                        this.skeletons = new Skeleton[frame.SkeletonArrayLength];
+                    }
+
+                    // Get the skeletons.
+                    frame.CopySkeletonDataTo(this.skeletons);
+
+                    this.recognizer.Recognize(sender, frame, this.skeletons);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Nexts the background.
+        /// </summary>
+        private void NextBackground()
+        {
+            this.CurrentBackground = (this.CurrentBackground + 1) % this.BackgroundImages.Count;
+            this.imgBackground.Source = this.BackgroundImages[this.CurrentBackground];
+        }
+
+        /// <summary>
+        /// Previouses the background.
+        /// </summary>
+        private void PreviousBackground()
+        {
+            this.CurrentBackground--;
+
+            if (this.CurrentBackground < 0)
+            {
+                this.CurrentBackground += this.BackgroundImages.Count;
+            }
+
+            this.imgBackground.Source = this.BackgroundImages[this.CurrentBackground];
         }
 
         /// <summary>
@@ -226,7 +338,7 @@ namespace ui_project
                         PixelFormats.Bgra32,
                         null);
 
-                    Foreground.OpacityMask = new ImageBrush { ImageSource = this.playerOpacityMaskImage };
+                    imgForeground.OpacityMask = new ImageBrush { ImageSource = this.playerOpacityMaskImage };
                 }
 
                 this.playerOpacityMaskImage.WritePixels(
