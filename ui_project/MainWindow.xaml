@@ -1,17 +1,49 @@
 ﻿<Window x:Class="ui_project.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Screening" Height="350" Width="525" Loaded="Window_Loaded" WindowState="Maximized">
+        Title="Screening" Height="550" Width="525" Loaded="Window_Loaded" WindowState="Maximized">
     <Grid Background="#eeeeee">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" MaxWidth="250" />
+            <ColumnDefinition Width="*" MaxWidth="225" />
         </Grid.ColumnDefinitions>
         <Image Name="imgBackground" Stretch="Fill" />
         <Image Name="imgForeground" />
+        <TextBlock Name="txtTag" Visibility="Collapsed" VerticalAlignment="Top" HorizontalAlignment="Center" Padding="10, 2" Background="#eeeeee" FontSize="24" FontWeight="Bold">TAG</TextBlock>
         <ScrollViewer Grid.Column="1">
-            <StackPanel Name="pnlCaptures">
+            <StackPanel>
+                <StackPanel Name="pnlHelp" Visibility="Collapsed" Margin="5">
+                    <TextBlock FontWeight="Bold">Voice Commands</TextBlock>
+                    <TextBlock>Show Next Background</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Next</TextBlock>
+                    <TextBlock>Show Previous Background</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Previous</TextBlock>
+                    <TextBlock>Start Slide Show</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Start</TextBlock>
+                    <TextBlock>Stop Slide Show</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Stop</TextBlock>
+                    <TextBlock>Take Screen Shot</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Take Picture</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Screen Shot</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Capture</TextBlock>
+                    <TextBlock>Angle Camera Up</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Look Up</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Tilt Up</TextBlock>
+                    <TextBlock>Angle Camera Down</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Look Down</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Tilt Down</TextBlock>
+                    <TextBlock></TextBlock>
+                    <TextBlock FontWeight="Bold">Gesture Commands</TextBlock>
+                    <TextBlock>Show Next Background</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Sweep Right Hand to the Left</TextBlock>
+                    <TextBlock>Show Previous Background</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Sweep Left Hand to the Right</TextBlock>
+                </StackPanel>
+                <StackPanel Name="pnlCaptures" Margin="5">
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
+        <TextBlock Name="txtShowHelp" Grid.Column="1" VerticalAlignment="Bottom" Background="#eeeeee" HorizontalAlignment="Left" Margin="0, 0, 10, 0" Padding="5, 1, 5, 5">Say "Show Help" to get started.</TextBlock>
+        <TextBlock Name="txtHideHelp" Visibility="Collapsed" Grid.Column="1" VerticalAlignment="Bottom" Background="#eeeeee" HorizontalAlignment="Left" Margin="0, 0, 10, 0" Padding="5, 1, 5, 5">Say "Hide Help" to hide help.</TextBlock>
     </Grid>
 </Window>

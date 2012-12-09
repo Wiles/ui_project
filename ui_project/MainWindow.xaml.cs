@@ -50,6 +50,8 @@ namespace ui_project
         private int adjustAngle = 5;
 
         private Timer slideshowTimer;
+        private Timer tagTimer;
+        private bool tagShowing = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainWindow" /> class.
@@ -74,6 +76,15 @@ namespace ui_project
             var images = Directory.GetFiles(curr + "\\Images\\");
             this.slideshowTimer = new Timer(2000);
             this.slideshowTimer.Elapsed += (s, ev) => this.NextBackground();
+
+            this.tagTimer = new Timer(500);
+            this.tagTimer.Elapsed += (s, ev) =>
+                {
+                    this.InvokeOnUI(
+                        () => this.txtTag.Visibility = System.Windows.Visibility.Collapsed);
+                    this.tagTimer.Stop();
+                    this.tagShowing = false;
+                };
 
             foreach (var image in images)
             {
@@ -295,11 +306,12 @@ namespace ui_project
                     encoder.Save(fs);
                 }
 
-                this.pnlCaptures.Children.Add(new System.Windows.Controls.Image() { Source = renderBitmap, Margin = new Thickness(10) });
+                this.pnlCaptures.Children.Add(new System.Windows.Controls.Image() { Source = renderBitmap, Margin = new Thickness(5) });
+                this.ShowTag("TAKING PICTURE");
             }
             catch (IOException)
             {
-                // do something, or something...
+                this.ShowTag("ERROR TAKING PICTURE");
             }
         }
 
@@ -310,6 +322,7 @@ namespace ui_project
         private void StartSlideShow()
         {
             this.slideshowTimer.Start();
+            this.ShowTag("START");
         }
 
         /// <summary>
@@ -319,6 +332,7 @@ namespace ui_project
         private void StopSlideShow()
         {
             this.slideshowTimer.Stop();
+            this.ShowTag("STOP");
         }
 
         /// <summary>
@@ -328,8 +342,8 @@ namespace ui_project
         private void NextBackground()
         {
             this.CurrentBackground = (this.CurrentBackground + 1) % this.BackgroundImages.Count;
-            this.Dispatcher.Invoke(new Action(
-                () => this.imgBackground.Source = this.BackgroundImages[this.CurrentBackground]));
+            this.InvokeOnUI(
+                () => this.imgBackground.Source = this.BackgroundImages[this.CurrentBackground]);
         }
 
         /// <summary>
@@ -345,7 +359,8 @@ namespace ui_project
                 this.CurrentBackground += this.BackgroundImages.Count;
             }
 
-            this.imgBackground.Source = this.BackgroundImages[this.CurrentBackground];
+            this.InvokeOnUI(
+                () => this.imgBackground.Source = this.BackgroundImages[this.CurrentBackground]);
         }
 
         /// <summary>
@@ -362,6 +377,7 @@ namespace ui_project
             }
 
             this.sensor.ElevationAngle = curr;
+            this.ShowTag("CAMERA ANGLE UP");
         }
 
         /// <summary>
@@ -378,6 +394,33 @@ namespace ui_project
             }
 
             this.sensor.ElevationAngle = curr;
+            this.ShowTag("CAMERA ANGLE DOWN");
+        }
+
+        /// <summary>
+        /// Shows the help.
+        /// </summary>
+        [VoiceCommand("SHOW_HELP", "show help")]
+        private void ShowHelp()
+        {
+            //pnlCaptures.Visibility = System.Windows.Visibility.Collapsed;
+            txtShowHelp.Visibility = System.Windows.Visibility.Collapsed;
+
+            pnlHelp.Visibility = System.Windows.Visibility.Visible;
+            txtHideHelp.Visibility = System.Windows.Visibility.Visible;
+        }
+
+        /// <summary>
+        /// Hides the help.
+        /// </summary>
+        [VoiceCommand("HIDE_HELP", "hide help")]
+        private void HideHelp()
+        {
+            //pnlCaptures.Visibility = System.Windows.Visibility.Visible;
+            txtShowHelp.Visibility = System.Windows.Visibility.Visible;
+
+            pnlHelp.Visibility = System.Windows.Visibility.Collapsed;
+            txtHideHelp.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         /// <summary>
@@ -388,7 +431,38 @@ namespace ui_project
         {
             this.Close();
         }
-        
+
+        /// <summary>
+        /// Invokes an action the on the UI thread.
+        /// </summary>
+        /// <param name="action">The action.</param>
+        private void InvokeOnUI(Action action)
+        {
+            this.Dispatcher.Invoke(action);
+        }
+
+
+        /// <summary>
+        /// Shows the tag.
+        /// </summary>
+        /// <param name="tag">The tag.</param>
+        private void ShowTag(string tag)
+        {
+            if (this.tagShowing)
+            {
+                this.tagTimer.Stop();
+            }
+
+            this.InvokeOnUI(
+                () =>
+                {
+                    this.txtTag.Text = tag;
+                    this.txtTag.Visibility = System.Windows.Visibility.Visible;
+                });
+
+            this.tagTimer.Start();
+        }
+
         /// <summary>
         /// Handler for skeleton ready handler.
         /// </summary>
