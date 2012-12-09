@@ -1,31 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-
+﻿
 namespace ui_project
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Timers;
+    using System.Windows;
+    using System.Windows.Media;
+    using System.Windows.Media.Imaging;
 
     using Microsoft.Kinect;
-    using System.IO;
     using Microsoft.Samples.Kinect.SwipeGestureRecognizer;
-    using System.Windows.Media.Animation;
+    using Microsoft.Speech.AudioFormat;
+    using Microsoft.Speech.Recognition;
+    using System.Reflection;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-
         private KinectSensor sensor;
 
         private const DepthImageFormat DepthFormat = DepthImageFormat.Resolution320x240Fps30;
@@ -51,6 +45,11 @@ namespace ui_project
         private Recognizer recognizer;
         private Skeleton[] skeletons = new Skeleton[0];
 
+        private SpeechRecognitionEngine speechEngine;
+        private Dictionary<string, MethodInfo> voiceCommands;
+
+        private Timer slideshowTimer;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MainWindow" /> class.
         /// </summary>
@@ -72,6 +71,8 @@ namespace ui_project
             // load background images
             var curr = Directory.GetCurrentDirectory();
             var images = Directory.GetFiles(curr + "\\Images\\");
+            this.slideshowTimer = new Timer(2000);
+            this.slideshowTimer.Elapsed += (s, ev) => this.NextBackground();
 
             foreach (var image in images)
             {
@@ -147,6 +148,42 @@ namespace ui_project
             }
 
             this.recognizer = CreateRecognizer();
+
+            RecognizerInfo ri = GetKinectRecognizer();
+
+            if (null != ri)
+            {
+                this.speechEngine = new SpeechRecognitionEngine(ri.Id);
+                this.voiceCommands = new Dictionary<string, MethodInfo>();
+
+                var actions = new Choices();
+                foreach (var method in typeof(MainWindow).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
+                {
+                    var attrs = method.GetCustomAttributes(typeof(VoiceCommandAttribute), true);
+                    if (attrs.Length > 0)
+                    {
+                        var attr = attrs[0] as VoiceCommandAttribute;
+                        this.voiceCommands.Add(attr.Tag, method);
+
+                        foreach(var item in attr.Items)
+                        {
+                            actions.Add(new SemanticResultValue(item, attr.Tag));
+                        }
+                    }
+                }
+                
+                var gb = new GrammarBuilder { Culture = ri.Culture };
+                gb.Append(actions);
+                
+                var g = new Grammar(gb);
+                speechEngine.LoadGrammar(g);
+
+                speechEngine.SpeechRecognized += SpeechRecognized;
+
+                speechEngine.SetInputToAudioStream(
+                    sensor.AudioSource.Start(), new SpeechAudioFormatInfo(EncodingFormat.Pcm, 16000, 16, 1, 32000, 2, null));
+                speechEngine.RecognizeAsync(RecognizeMode.Multiple);
+            }
         }
 
         /// <summary>
@@ -171,6 +208,103 @@ namespace ui_project
             };
 
             return recognizer;
+        }
+
+        /// <summary>
+        /// Gets the metadata for the speech recognizer (acoustic model) most suitable to
+        /// process audio from Kinect device.
+        /// </summary>
+        /// <returns>
+        /// RecognizerInfo if found, <code>null</code> otherwise.
+        /// </returns>
+        private static RecognizerInfo GetKinectRecognizer()
+        {
+            foreach (RecognizerInfo recognizer in SpeechRecognitionEngine.InstalledRecognizers())
+            {
+                string value;
+                recognizer.AdditionalInfo.TryGetValue("Kinect", out value);
+                if ("True".Equals(value, StringComparison.OrdinalIgnoreCase) && "en-US".Equals(recognizer.Culture.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return recognizer;
+                }
+            }
+
+            return null;
+        }
+        
+        /// <summary>
+        /// Handler for recognized speech events.
+        /// </summary>
+        /// <param name="sender">object sending the event.</param>
+        /// <param name="e">event arguments.</param>
+        private void SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
+        {
+            // Speech utterance confidence below which we treat speech as if it hadn't been heard
+            const double ConfidenceThreshold = 0.3;
+
+            if (e.Result.Confidence >= ConfidenceThreshold)
+            {
+                var tag = e.Result.Semantics.Value.ToString();
+                if (this.voiceCommands.ContainsKey(tag))
+                {
+                    var method = this.voiceCommands[tag];
+                    method.Invoke(this, null);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Takes a picture.
+        /// </summary>
+        [VoiceCommand("CAPTURE", "screen shot", "take picture", "capture")]
+        private void TakePicture()
+        {
+
+        }
+
+        /// <summary>
+        /// Starts the slide show.
+        /// </summary>
+        [VoiceCommand("START", "start")]
+        private void StartSlideShow()
+        {
+            this.slideshowTimer.Start();
+        }
+
+        /// <summary>
+        /// Stops the slide show.
+        /// </summary>
+        [VoiceCommand("STOP", "stop")]
+        private void StopSlideShow()
+        {
+            this.slideshowTimer.Stop();
+        }
+
+        /// <summary>
+        /// Nexts the background.
+        /// </summary>
+        [VoiceCommand("NEXT", "next")]
+        private void NextBackground()
+        {
+            this.CurrentBackground = (this.CurrentBackground + 1) % this.BackgroundImages.Count;
+            this.Dispatcher.Invoke(new Action(
+                () => this.imgBackground.Source = this.BackgroundImages[this.CurrentBackground]));
+        }
+
+        /// <summary>
+        /// Previouses the background.
+        /// </summary>
+        [VoiceCommand("PREVIOUS", "previous")]
+        private void PreviousBackground()
+        {
+            this.CurrentBackground--;
+
+            if (this.CurrentBackground < 0)
+            {
+                this.CurrentBackground += this.BackgroundImages.Count;
+            }
+
+            this.imgBackground.Source = this.BackgroundImages[this.CurrentBackground];
         }
         
         /// <summary>
@@ -198,30 +332,6 @@ namespace ui_project
                     this.recognizer.Recognize(sender, frame, this.skeletons);
                 }
             }
-        }
-
-        /// <summary>
-        /// Nexts the background.
-        /// </summary>
-        private void NextBackground()
-        {
-            this.CurrentBackground = (this.CurrentBackground + 1) % this.BackgroundImages.Count;
-            this.imgBackground.Source = this.BackgroundImages[this.CurrentBackground];
-        }
-
-        /// <summary>
-        /// Previouses the background.
-        /// </summary>
-        private void PreviousBackground()
-        {
-            this.CurrentBackground--;
-
-            if (this.CurrentBackground < 0)
-            {
-                this.CurrentBackground += this.BackgroundImages.Count;
-            }
-
-            this.imgBackground.Source = this.BackgroundImages[this.CurrentBackground];
         }
 
         /// <summary>
