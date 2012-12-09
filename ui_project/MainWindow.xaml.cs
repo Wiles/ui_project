@@ -47,6 +47,7 @@ namespace ui_project
 
         private SpeechRecognitionEngine speechEngine;
         private Dictionary<string, MethodInfo> voiceCommands;
+        private int adjustAngle = 5;
 
         private Timer slideshowTimer;
 
@@ -283,8 +284,8 @@ namespace ui_project
             encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
 
             string time = System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-            string myPhotos = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-            string path = Path.Combine(myPhotos, "ScreenShot_" + time + ".png");
+            string folder = Directory.GetCurrentDirectory();
+            string path = Path.Combine(folder, "ScreenShot_" + time + ".png");
 
             // write the new file to disk
             try
@@ -293,6 +294,8 @@ namespace ui_project
                 {
                     encoder.Save(fs);
                 }
+
+                this.pnlCaptures.Children.Add(new System.Windows.Controls.Image() { Source = renderBitmap, Margin = new Thickness(10) });
             }
             catch (IOException)
             {
@@ -343,6 +346,47 @@ namespace ui_project
             }
 
             this.imgBackground.Source = this.BackgroundImages[this.CurrentBackground];
+        }
+
+        /// <summary>
+        /// Tilts the kinect sensor up.
+        /// </summary>
+        [VoiceCommand("UP", "look up", "tilt up")]
+        private void TiltUp()
+        {
+            var curr = this.sensor.ElevationAngle;
+            curr += this.adjustAngle;
+            if (curr > 27)
+            {
+                curr = 27;
+            }
+
+            this.sensor.ElevationAngle = curr;
+        }
+
+        /// <summary>
+        /// Tilts the kinect sensor down.
+        /// </summary>
+        [VoiceCommand("DOWN", "look down", "tilt down")]
+        private void TiltDown()
+        {
+            var curr = this.sensor.ElevationAngle;
+            curr -= this.adjustAngle;
+            if (curr < -27)
+            {
+                curr = -27;
+            }
+
+            this.sensor.ElevationAngle = curr;
+        }
+
+        /// <summary>
+        /// Exits the app.
+        /// </summary>
+        [VoiceCommand("EXIT", "exit program")]
+        private void Exit()
+        {
+            this.Close();
         }
         
         /// <summary>
