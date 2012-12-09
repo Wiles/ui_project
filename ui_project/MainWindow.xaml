@@ -11,6 +11,8 @@
         <Image Name="imgBackground" Stretch="Fill" />
         <Image Name="imgForeground" />
         <TextBlock Name="txtTag" Visibility="Collapsed" VerticalAlignment="Top" HorizontalAlignment="Center" Padding="10, 2" Background="#eeeeee" FontSize="24" FontWeight="Bold">TAG</TextBlock>
+        <TextBlock Name="txtName"  VerticalAlignment="Bottom" HorizontalAlignment="Left" Padding="10, 2" Background="#eeeeee" FontSize="14" FontWeight="Bold">File Name</TextBlock>
+        <TextBlock Name="txtInverted" Visibility="Collapsed" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="10, 2" Background="#eeeeee" FontSize="14" FontWeight="Bold">Inverted</TextBlock>
         <Rectangle Grid.Column="1" Fill="Black" />
         <ScrollViewer Grid.Column="2">
             <StackPanel>
@@ -28,12 +30,18 @@
                     <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Take Picture</TextBlock>
                     <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Screen Shot</TextBlock>
                     <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Capture</TextBlock>
+                    <TextBlock>Show Background Image Name</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Show File Name</TextBlock>
+                    <TextBlock>Hide Background Image Name</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Hide File Name</TextBlock>
                     <TextBlock>Angle Camera Up</TextBlock>
                     <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Look Up</TextBlock>
                     <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Tilt Up</TextBlock>
                     <TextBlock>Angle Camera Down</TextBlock>
                     <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Look Down</TextBlock>
                     <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Tilt Down</TextBlock>
+                    <TextBlock>Invert Gesture Recognition</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Invert Gestures</TextBlock>
                     <TextBlock></TextBlock>
                     <TextBlock FontWeight="Bold">Gesture Commands</TextBlock>
                     <TextBlock>Show Next Background</TextBlock>
@@ -45,7 +53,7 @@
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>
-        <TextBlock Name="txtShowHelp" Grid.Column="1" VerticalAlignment="Bottom" Background="#eeeeee" HorizontalAlignment="Left" Margin="0, 0, 10, 0" Padding="5, 1, 5, 5">Say "Show Help" to get started.</TextBlock>
-        <TextBlock Name="txtHideHelp" Visibility="Collapsed" Grid.Column="1" VerticalAlignment="Bottom" Background="#eeeeee" HorizontalAlignment="Left" Margin="0, 0, 10, 0" Padding="5, 1, 5, 5">Say "Hide Help" to hide help.</TextBlock>
+        <TextBlock Name="txtShowHelp" Grid.Column="2" VerticalAlignment="Bottom" Background="#eeeeee" HorizontalAlignment="Left" Margin="0, 0, 10, 0" Padding="5, 1, 5, 5">Say "Show Help" to get started.</TextBlock>
+        <TextBlock Name="txtHideHelp" Visibility="Collapsed" Grid.Column="2" VerticalAlignment="Bottom" Background="#eeeeee" HorizontalAlignment="Left" Margin="0, 0, 10, 0" Padding="5, 1, 5, 5">Say "Hide Help" to hide help.</TextBlock>
     </Grid>
 </Window>

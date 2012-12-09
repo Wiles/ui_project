@@ -14,6 +14,7 @@ namespace ui_project
     using Microsoft.Speech.AudioFormat;
     using Microsoft.Speech.Recognition;
     using System.Reflection;
+    using System.ComponentModel;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -41,6 +42,7 @@ namespace ui_project
         private Skeleton[] skeletons = new Skeleton[0];
         private SpeechRecognitionEngine speechEngine;
         private Dictionary<string, MethodInfo> voiceCommands;
+        private bool gesturesInverted = false;
 
         private Timer slideshowTimer;
         private bool slideshowRunning = false;
@@ -70,16 +72,7 @@ namespace ui_project
             var curr = Directory.GetCurrentDirectory();
             var images = Directory.GetFiles(curr + "\\Images\\");
             this.slideshowTimer = new Timer(2000);
-            this.slideshowTimer.Elapsed += (s, ev) => this.NextBackground();
-
-            this.tagTimer = new Timer(500);
-            this.tagTimer.Elapsed += (s, ev) =>
-                {
-                    this.InvokeOnUI(
-                        () => this.txtTag.Visibility = System.Windows.Visibility.Collapsed);
-                    this.tagTimer.Stop();
-                    this.tagShowing = false;
-                };
+            this.slideshowTimer.Elapsed += (s, ev) => this.ShowNext();
 
             foreach (var image in images)
             {
@@ -89,8 +82,19 @@ namespace ui_project
 
             if (this.BackgroundImages.Count > 0)
             {
-                this.imgBackground.Source = this.BackgroundImages[0];
+                var bmp = this.BackgroundImages[0];
+                this.imgBackground.Source = bmp;
+                this.txtName.Text = Path.GetFileNameWithoutExtension(bmp.UriSource.ToString());
             }
+
+            this.tagTimer = new Timer(500);
+            this.tagTimer.Elapsed += (s, ev) =>
+            {
+                this.InvokeOnUI(
+                    () => this.txtTag.Visibility = System.Windows.Visibility.Collapsed);
+                this.tagTimer.Stop();
+                this.tagShowing = false;
+            };
 
             // Look through all sensors and start the first connected one.
             // This requires that a Kinect is connected at the time of app startup.
@@ -156,8 +160,7 @@ namespace ui_project
 
             this.recognizer = CreateRecognizer();
 
-            RecognizerInfo ri = GetKinectRecognizer();
-
+            RecognizerInfo ri = GetSpeechRecognizer();
             if (null != ri)
             {
                 this.speechEngine = new SpeechRecognitionEngine(ri.Id);
@@ -205,13 +208,27 @@ namespace ui_project
             // Wire-up swipe right to manually advance picture.
             recognizer.SwipeRightDetected += (s, e) =>
             {
-                NextBackground();
+                if (!gesturesInverted)
+                {
+                    this.NextBackground();
+                }
+                else
+                {
+                    this.PreviousBackground();
+                }
             };
 
             // Wire-up swipe left to manually reverse picture.
             recognizer.SwipeLeftDetected += (s, e) =>
             {
-                PreviousBackground();
+                if (!gesturesInverted)
+                {
+                    this.PreviousBackground();
+                }
+                else
+                {
+                    this.NextBackground();
+                }
             };
 
             return recognizer;
@@ -224,7 +241,7 @@ namespace ui_project
         /// <returns>
         /// RecognizerInfo if found, <code>null</code> otherwise.
         /// </returns>
-        private static RecognizerInfo GetKinectRecognizer()
+        private static RecognizerInfo GetSpeechRecognizer()
         {
             foreach (RecognizerInfo recognizer in SpeechRecognitionEngine.InstalledRecognizers())
             {
@@ -344,9 +361,11 @@ namespace ui_project
         [VoiceCommand("NEXT", "next")]
         private void NextBackground()
         {
-            this.CurrentBackground = (this.CurrentBackground + 1) % this.BackgroundImages.Count;
-            this.InvokeOnUI(
-                () => this.imgBackground.Source = this.BackgroundImages[this.CurrentBackground]);
+            if (!slideshowRunning)
+            {
+                this.ShowTag("NEXT");
+                ShowNext();
+            }
         }
 
         /// <summary>
@@ -355,15 +374,11 @@ namespace ui_project
         [VoiceCommand("PREVIOUS", "previous")]
         private void PreviousBackground()
         {
-            this.CurrentBackground--;
-
-            if (this.CurrentBackground < 0)
+            if (!slideshowRunning)
             {
-                this.CurrentBackground += this.BackgroundImages.Count;
+                this.ShowTag("PREVIOUS");
+                ShowPrevious();
             }
-
-            this.InvokeOnUI(
-                () => this.imgBackground.Source = this.BackgroundImages[this.CurrentBackground]);
         }
 
         /// <summary>
@@ -379,8 +394,10 @@ namespace ui_project
                 curr = 27;
             }
 
-            this.sensor.ElevationAngle = curr;
             this.ShowTag("CAMERA ANGLE UP");
+            var bg = new BackgroundWorker();
+            bg.DoWork += (s, e) => this.sensor.ElevationAngle = curr;
+            bg.RunWorkerAsync();
         }
 
         /// <summary>
@@ -396,8 +413,10 @@ namespace ui_project
                 curr = -27;
             }
 
-            this.sensor.ElevationAngle = curr;
             this.ShowTag("CAMERA ANGLE DOWN");
+            var bg = new BackgroundWorker();
+            bg.DoWork += (s, e) => this.sensor.ElevationAngle = curr;
+            bg.RunWorkerAsync();
         }
 
         /// <summary>
@@ -427,12 +446,85 @@ namespace ui_project
         }
 
         /// <summary>
+        /// Shows the name of the file.
+        /// </summary>
+        [VoiceCommand("SHOW_FILENAME", "show name", "show file name")]
+        private void ShowFileName()
+        {
+            this.InvokeOnUI(() => this.txtName.Visibility = System.Windows.Visibility.Visible);
+        }
+
+        /// <summary>
+        /// Hides the name of the file.
+        /// </summary>
+        [VoiceCommand("HIDE_FILENAME", "hide name", "hide file name")]
+        private void HideFileName()
+        {
+            this.InvokeOnUI(() => this.txtName.Visibility = System.Windows.Visibility.Collapsed);
+        }
+
+        /// <summary>
+        /// Inverts the gestures.
+        /// </summary>
+        [VoiceCommand("INVERT", "invert gestures")]
+        private void InvertGestures()
+        {
+            this.gesturesInverted = !this.gesturesInverted;
+
+            if (this.gesturesInverted)
+            {
+                this.txtInverted.Visibility = System.Windows.Visibility.Visible;
+            }
+            else
+            {
+                this.txtInverted.Visibility = System.Windows.Visibility.Collapsed;
+            }
+        }
+
+        /// <summary>
         /// Exits the app.
         /// </summary>
         [VoiceCommand("EXIT", "exit program")]
         private void Exit()
         {
             this.Close();
+        }
+
+        /// <summary>
+        /// Shows the next background image.
+        /// </summary>
+        private void ShowNext()
+        {
+            this.CurrentBackground = (this.CurrentBackground + 1) % this.BackgroundImages.Count;
+
+            var bmp = this.BackgroundImages[this.CurrentBackground];
+            this.InvokeOnUI(
+                () =>
+                {
+                    this.imgBackground.Source = bmp;
+                    this.txtName.Text = Path.GetFileNameWithoutExtension(bmp.UriSource.ToString());
+                });
+        }
+
+        /// <summary>
+        /// Shows the previous background image.
+        /// </summary>
+        private void ShowPrevious()
+        {
+            this.CurrentBackground--;
+
+            if (this.CurrentBackground < 0)
+            {
+                this.CurrentBackground += this.BackgroundImages.Count;
+            }
+
+            var bmp = this.BackgroundImages[this.CurrentBackground];
+            this.InvokeOnUI(
+                () =>
+                {
+                    this.imgBackground.Source = bmp;
+                    this.txtName.Text = Path.GetFileNameWithoutExtension(bmp.UriSource.ToString());
+                });
         }
 
         /// <summary>
