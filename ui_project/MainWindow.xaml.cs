@@ -322,7 +322,7 @@ namespace ui_project
         private void StartSlideShow()
         {
             this.slideshowTimer.Start();
-            this.ShowTag("START");
+            this.ShowTag("START SLIDESHOW");
         }
 
         /// <summary>
@@ -332,7 +332,7 @@ namespace ui_project
         private void StopSlideShow()
         {
             this.slideshowTimer.Stop();
-            this.ShowTag("STOP");
+            this.ShowTag("STOP SLIDESHOW");
         }
 
         /// <summary>
