@@ -3,7 +3,9 @@ namespace ui_project
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.IO;
+    using System.Reflection;
     using System.Timers;
     using System.Windows;
     using System.Windows.Media;
@@ -13,8 +15,6 @@ namespace ui_project
     using Microsoft.Samples.Kinect.SwipeGestureRecognizer;
     using Microsoft.Speech.AudioFormat;
     using Microsoft.Speech.Recognition;
-    using System.Reflection;
-    using System.ComponentModel;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -276,7 +276,7 @@ namespace ui_project
         /// <summary>
         /// Takes a picture.
         /// </summary>
-        [VoiceCommand("CAPTURE", "screen shot", "take picture", "capture")]
+        [VoiceCommand("CAPTURE", "screen shot", "take picture")]
         private void TakePicture()
         {
             if (null == this.sensor)
@@ -318,13 +318,24 @@ namespace ui_project
                     encoder.Save(fs);
                 }
 
-                this.pnlCaptures.Children.Add(new System.Windows.Controls.Image() { Source = renderBitmap, Margin = new Thickness(5) });
+                this.pnlCaptures.Children.Add(new System.Windows.Controls.Image() { Source = renderBitmap, Margin = new Thickness(5, 5, 5, 0) });
+                this.pnlCaptures.Children.Add(new System.Windows.Controls.TextBlock() { Text = Path.GetFileNameWithoutExtension(path), Margin = new Thickness(0, 0, 0, 5), HorizontalAlignment = System.Windows.HorizontalAlignment.Center });
                 this.ShowTag("TAKING PICTURE");
             }
             catch (IOException)
             {
                 this.ShowTag("ERROR TAKING PICTURE");
             }
+        }
+
+        /// <summary>
+        /// Clears the picture.
+        /// </summary>
+        [VoiceCommand("CLEAR", "clear pictures")]
+        private void ClearPicture()
+        {
+            this.ShowTag("CLEARING PICTURES");
+            this.pnlCaptures.Children.Clear();
         }
 
         /// <summary>
