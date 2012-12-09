@@ -5,12 +5,14 @@
     <Grid Background="#eeeeee">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="1" />
             <ColumnDefinition Width="*" MaxWidth="225" />
         </Grid.ColumnDefinitions>
         <Image Name="imgBackground" Stretch="Fill" />
         <Image Name="imgForeground" />
         <TextBlock Name="txtTag" Visibility="Collapsed" VerticalAlignment="Top" HorizontalAlignment="Center" Padding="10, 2" Background="#eeeeee" FontSize="24" FontWeight="Bold">TAG</TextBlock>
-        <ScrollViewer Grid.Column="1">
+        <Rectangle Grid.Column="1" Fill="Black" />
+        <ScrollViewer Grid.Column="2">
             <StackPanel>
                 <StackPanel Name="pnlHelp" Visibility="Collapsed" Margin="5">
                     <TextBlock FontWeight="Bold">Voice Commands</TextBlock>

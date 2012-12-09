@@ -21,15 +21,10 @@ namespace ui_project
     public partial class MainWindow : Window
     {
         private KinectSensor sensor;
-
-        private const DepthImageFormat DepthFormat = DepthImageFormat.Resolution320x240Fps30;
-
-        private const ColorImageFormat ColorFormat = ColorImageFormat.RgbResolution640x480Fps30;
-
         private int depthWidth;
-
         private int depthHeight;
-
+        private const DepthImageFormat DepthFormat = DepthImageFormat.Resolution320x240Fps30;
+        private const ColorImageFormat ColorFormat = ColorImageFormat.RgbResolution640x480Fps30;
         private int colorToDepthDivisor;
         private DepthImagePixel[] depthPixels;
         private byte[] colorPixels;
@@ -44,14 +39,14 @@ namespace ui_project
 
         private Recognizer recognizer;
         private Skeleton[] skeletons = new Skeleton[0];
-
         private SpeechRecognitionEngine speechEngine;
         private Dictionary<string, MethodInfo> voiceCommands;
-        private int adjustAngle = 5;
 
         private Timer slideshowTimer;
+        private bool slideshowRunning = false;
         private Timer tagTimer;
         private bool tagShowing = false;
+        private int adjustAngle = 5;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainWindow" /> class.
@@ -321,8 +316,12 @@ namespace ui_project
         [VoiceCommand("START", "start")]
         private void StartSlideShow()
         {
-            this.slideshowTimer.Start();
-            this.ShowTag("START SLIDESHOW");
+            if (!slideshowRunning)
+            {
+                this.slideshowTimer.Start();
+                this.slideshowRunning = true;
+                this.ShowTag("START SLIDESHOW");
+            }
         }
 
         /// <summary>
@@ -331,8 +330,12 @@ namespace ui_project
         [VoiceCommand("STOP", "stop")]
         private void StopSlideShow()
         {
-            this.slideshowTimer.Stop();
-            this.ShowTag("STOP SLIDESHOW");
+            if (slideshowRunning)
+            {
+                this.slideshowTimer.Stop();
+                this.slideshowRunning = false;
+                this.ShowTag("STOP SLIDESHOW");
+            }
         }
 
         /// <summary>
