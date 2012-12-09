@@ -245,11 +245,7 @@ namespace ui_project
             if (e.Result.Confidence >= ConfidenceThreshold)
             {
                 var tag = e.Result.Semantics.Value.ToString();
-                if (this.voiceCommands.ContainsKey(tag))
-                {
-                    var method = this.voiceCommands[tag];
-                    method.Invoke(this, null);
-                }
+                this.voiceCommands[tag].Invoke(this, null);
             }
         }
 
@@ -259,7 +255,49 @@ namespace ui_project
         [VoiceCommand("CAPTURE", "screen shot", "take picture", "capture")]
         private void TakePicture()
         {
+            if (null == this.sensor)
+            {
+                return;
+            }
 
+            int colorWidth = this.sensor.ColorStream.FrameWidth;
+            int colorHeight = this.sensor.ColorStream.FrameHeight;
+
+            // create a render target that we'll render our controls to
+            RenderTargetBitmap renderBitmap = new RenderTargetBitmap(colorWidth, colorHeight, 96.0, 96.0, PixelFormats.Pbgra32);
+
+            DrawingVisual dv = new DrawingVisual();
+            using (DrawingContext dc = dv.RenderOpen())
+            {
+                // render the backdrop
+                VisualBrush backdropBrush = new VisualBrush(imgBackground);
+                dc.DrawRectangle(backdropBrush, null, new Rect(new Point(), new Size(colorWidth, colorHeight)));
+
+                // render the color image masked out by players
+                VisualBrush colorBrush = new VisualBrush(imgForeground);
+                dc.DrawRectangle(colorBrush, null, new Rect(new Point(), new Size(colorWidth, colorHeight)));
+            }
+
+            renderBitmap.Render(dv);
+            BitmapEncoder encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
+
+            string time = System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+            string myPhotos = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+            string path = Path.Combine(myPhotos, "ScreenShot_" + time + ".png");
+
+            // write the new file to disk
+            try
+            {
+                using (FileStream fs = new FileStream(path, FileMode.Create))
+                {
+                    encoder.Save(fs);
+                }
+            }
+            catch (IOException)
+            {
+                // do something, or something...
+            }
         }
 
         /// <summary>
