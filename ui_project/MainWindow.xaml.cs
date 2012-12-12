@@ -50,6 +50,9 @@ namespace ui_project
         private bool tagShowing = false;
         private int adjustAngle = 5;
 
+        private bool isListening = true;
+        private bool isWatching = true;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MainWindow" /> class.
         /// </summary>
@@ -208,26 +211,32 @@ namespace ui_project
             // Wire-up swipe right to manually advance picture.
             recognizer.SwipeRightDetected += (s, e) =>
             {
-                if (!gesturesInverted)
+                if (isWatching)
                 {
-                    this.NextBackground();
-                }
-                else
-                {
-                    this.PreviousBackground();
+                    if (!gesturesInverted)
+                    {
+                        this.ShowNext();
+                    }
+                    else
+                    {
+                        this.ShowPrevious();
+                    }
                 }
             };
 
             // Wire-up swipe left to manually reverse picture.
             recognizer.SwipeLeftDetected += (s, e) =>
             {
-                if (!gesturesInverted)
+                if (isWatching)
                 {
-                    this.PreviousBackground();
-                }
-                else
-                {
-                    this.NextBackground();
+                    if (!gesturesInverted)
+                    {
+                        this.ShowPrevious();
+                    }
+                    else
+                    {
+                        this.ShowNext();
+                    }
                 }
             };
 
@@ -279,6 +288,12 @@ namespace ui_project
         [VoiceCommand("CAPTURE", "screen shot", "take picture")]
         private void TakePicture()
         {
+
+            if (!isListening)
+            {
+                return;
+            }
+
             if (null == this.sensor)
             {
                 return;
@@ -334,17 +349,20 @@ namespace ui_project
         [VoiceCommand("CLEAR", "clear pictures")]
         private void ClearPicture()
         {
-            this.ShowTag("CLEARING PICTURES");
-            this.pnlCaptures.Children.Clear();
+            if (isListening)
+            {
+                this.ShowTag("CLEARING PICTURES");
+                this.pnlCaptures.Children.Clear();
+            }
         }
 
         /// <summary>
         /// Starts the slide show.
         /// </summary>
-        [VoiceCommand("START", "start")]
+        [VoiceCommand("START_SLIDESHOW", "start slideshow")]
         private void StartSlideShow()
         {
-            if (!slideshowRunning)
+            if (!slideshowRunning && isListening)
             {
                 this.slideshowTimer.Start();
                 this.slideshowRunning = true;
@@ -355,14 +373,48 @@ namespace ui_project
         /// <summary>
         /// Stops the slide show.
         /// </summary>
-        [VoiceCommand("STOP", "stop")]
+        [VoiceCommand("STOP_SLIDESHOW", "stop slideshow")]
         private void StopSlideShow()
         {
-            if (slideshowRunning)
+            if (slideshowRunning && isListening)
             {
                 this.slideshowTimer.Stop();
                 this.slideshowRunning = false;
                 this.ShowTag("STOP SLIDESHOW");
+            }
+        }
+
+        [VoiceCommand("START_LISTEN", "start listening")]
+        private void StartListening()
+        {
+            this.isListening = true;
+            this.txtListening.Visibility = System.Windows.Visibility.Visible;
+        }
+
+        [VoiceCommand("STOP_LISTEN", "stop listening")]
+        private void StopListening()
+        {
+            this.isListening = false;
+            this.txtListening.Visibility = System.Windows.Visibility.Collapsed;
+        }
+
+        [VoiceCommand("START_WATCHING", "start watching")]
+        private void StartWatching()
+        {
+            if (isListening)
+            {
+                this.isWatching = true;
+                this.txtWatching.Visibility = System.Windows.Visibility.Visible;
+            }
+        }
+
+        [VoiceCommand("STOP_WATCHING", "stop watching")]
+        private void StopWatching()
+        {
+            if (isListening)
+            {
+                this.isWatching = false;
+                this.txtWatching.Visibility = System.Windows.Visibility.Collapsed;
             }
         }
 
@@ -372,7 +424,7 @@ namespace ui_project
         [VoiceCommand("NEXT", "next")]
         private void NextBackground()
         {
-            if (!slideshowRunning)
+            if (!slideshowRunning && isListening)
             {
                 this.ShowTag("NEXT");
                 ShowNext();
@@ -385,7 +437,7 @@ namespace ui_project
         [VoiceCommand("PREVIOUS", "previous")]
         private void PreviousBackground()
         {
-            if (!slideshowRunning)
+            if (!slideshowRunning && isListening)
             {
                 this.ShowTag("PREVIOUS");
                 ShowPrevious();
@@ -398,17 +450,20 @@ namespace ui_project
         [VoiceCommand("UP", "look up", "tilt up")]
         private void TiltUp()
         {
-            var curr = this.sensor.ElevationAngle;
-            curr += this.adjustAngle;
-            if (curr > 27)
+            if (isListening)
             {
-                curr = 27;
-            }
+                var curr = this.sensor.ElevationAngle;
+                curr += this.adjustAngle;
+                if (curr > 27)
+                {
+                    curr = 27;
+                }
 
-            this.ShowTag("CAMERA ANGLE UP");
-            var bg = new BackgroundWorker();
-            bg.DoWork += (s, e) => this.sensor.ElevationAngle = curr;
-            bg.RunWorkerAsync();
+                this.ShowTag("CAMERA ANGLE UP");
+                var bg = new BackgroundWorker();
+                bg.DoWork += (s, e) => this.sensor.ElevationAngle = curr;
+                bg.RunWorkerAsync();
+            }
         }
 
         /// <summary>
@@ -417,17 +472,20 @@ namespace ui_project
         [VoiceCommand("DOWN", "look down", "tilt down")]
         private void TiltDown()
         {
-            var curr = this.sensor.ElevationAngle;
-            curr -= this.adjustAngle;
-            if (curr < -27)
+            if (isListening)
             {
-                curr = -27;
-            }
+                var curr = this.sensor.ElevationAngle;
+                curr -= this.adjustAngle;
+                if (curr < -27)
+                {
+                    curr = -27;
+                }
 
-            this.ShowTag("CAMERA ANGLE DOWN");
-            var bg = new BackgroundWorker();
-            bg.DoWork += (s, e) => this.sensor.ElevationAngle = curr;
-            bg.RunWorkerAsync();
+                this.ShowTag("CAMERA ANGLE DOWN");
+                var bg = new BackgroundWorker();
+                bg.DoWork += (s, e) => this.sensor.ElevationAngle = curr;
+                bg.RunWorkerAsync();
+            }
         }
 
         /// <summary>
@@ -462,7 +520,10 @@ namespace ui_project
         [VoiceCommand("SHOW_FILENAME", "show name", "show file name")]
         private void ShowFileName()
         {
-            this.InvokeOnUI(() => this.txtName.Visibility = System.Windows.Visibility.Visible);
+            if (isListening)
+            {
+                this.InvokeOnUI(() => this.txtName.Visibility = System.Windows.Visibility.Visible);
+            }
         }
 
         /// <summary>
@@ -471,7 +532,10 @@ namespace ui_project
         [VoiceCommand("HIDE_FILENAME", "hide name", "hide file name")]
         private void HideFileName()
         {
-            this.InvokeOnUI(() => this.txtName.Visibility = System.Windows.Visibility.Collapsed);
+            if (isListening)
+            {
+                this.InvokeOnUI(() => this.txtName.Visibility = System.Windows.Visibility.Collapsed);
+            }
         }
 
         /// <summary>
@@ -480,25 +544,31 @@ namespace ui_project
         [VoiceCommand("INVERT", "invert gestures")]
         private void InvertGestures()
         {
-            this.gesturesInverted = !this.gesturesInverted;
+            if (isListening)
+            {
+                this.gesturesInverted = !this.gesturesInverted;
 
-            if (this.gesturesInverted)
-            {
-                this.txtInverted.Visibility = System.Windows.Visibility.Visible;
-            }
-            else
-            {
-                this.txtInverted.Visibility = System.Windows.Visibility.Collapsed;
+                if (this.gesturesInverted)
+                {
+                    this.txtInverted.Visibility = System.Windows.Visibility.Visible;
+                }
+                else
+                {
+                    this.txtInverted.Visibility = System.Windows.Visibility.Collapsed;
+                }
             }
         }
 
         /// <summary>
         /// Exits the app.
         /// </summary>
-        [VoiceCommand("EXIT", "exit program")]
+        //[VoiceCommand("EXIT", "exit program")]
         private void Exit()
         {
-            this.Close();
+            if (isListening)
+            {
+                this.Close();
+            }
         }
 
         /// <summary>

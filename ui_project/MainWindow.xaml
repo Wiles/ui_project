@@ -12,7 +12,11 @@
         <Image Name="imgForeground" />
         <TextBlock Name="txtTag" Visibility="Collapsed" VerticalAlignment="Top" HorizontalAlignment="Center" Padding="10, 2" Background="#eeeeee" FontSize="24" FontWeight="Bold">TAG</TextBlock>
         <TextBlock Name="txtName"  VerticalAlignment="Bottom" HorizontalAlignment="Left" Padding="10, 2" Background="#eeeeee" FontSize="14" FontWeight="Bold">File Name</TextBlock>
-        <TextBlock Name="txtInverted" Visibility="Collapsed" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="10, 2" Background="#eeeeee" FontSize="14" FontWeight="Bold">Inverted</TextBlock>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Right">
+            <TextBlock Name="txtInverted" Visibility="Collapsed" Padding="10, 2" Margin="1 0 0 0" Background="#eeeeee" FontSize="14" FontWeight="Bold">Inverted</TextBlock>
+            <TextBlock Name="txtListening" Padding="10, 2" Margin="1 0 0 0" Background="#eeeeee" FontSize="14" FontWeight="Bold">Listening</TextBlock>
+            <TextBlock Name="txtWatching" Padding="10, 2" Margin="1 0 0 0" Background="#eeeeee" FontSize="14" FontWeight="Bold">Watching</TextBlock>
+        </StackPanel>
         <Rectangle Grid.Column="1" Fill="Black" />
         <ScrollViewer Grid.Column="2">
             <StackPanel>
@@ -23,9 +27,9 @@
                     <TextBlock>Show Previous Background</TextBlock>
                     <TextBlock Padding="20, 0, 0, 2" FontStyle="Italic">Previous</TextBlock>
                     <TextBlock>Start Slide Show</TextBlock>
-                    <TextBlock Padding="20, 0, 0, 2" FontStyle="Italic">Start</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 2" FontStyle="Italic">Start Slide Show</TextBlock>
                     <TextBlock>Stop Slide Show</TextBlock>
-                    <TextBlock Padding="20, 0, 0, 2" FontStyle="Italic">Stop</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 2" FontStyle="Italic">Stop Slide Show</TextBlock>
                     <TextBlock>Take Screen Shot</TextBlock>
                     <TextBlock Padding="20, 0, 0, 0" FontStyle="Italic">Take Picture</TextBlock>
                     <TextBlock Padding="20, 0, 0, 2" FontStyle="Italic">Screen Shot</TextBlock>
@@ -43,6 +47,14 @@
                     <TextBlock Padding="20, 0, 0, 2" FontStyle="Italic">Tilt Down</TextBlock>
                     <TextBlock>Invert Gesture Recognition</TextBlock>
                     <TextBlock Padding="20, 0, 0, 2" FontStyle="Italic">Invert Gestures</TextBlock>
+                    <TextBlock>Enable Gestures</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 2" FontStyle="Italic">Start Watching</TextBlock>
+                    <TextBlock>Disable Gestures</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 2" FontStyle="Italic">Stop Watching</TextBlock>
+                    <TextBlock>Enable Voice Commands</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 2" FontStyle="Italic">Start Listening</TextBlock>
+                    <TextBlock>Disable Voice Commands</TextBlock>
+                    <TextBlock Padding="20, 0, 0, 2" FontStyle="Italic">Stop Listening</TextBlock>
                     <TextBlock></TextBlock>
                     <TextBlock FontWeight="Bold">Gesture Commands</TextBlock>
                     <TextBlock>Show Next Background</TextBlock>
